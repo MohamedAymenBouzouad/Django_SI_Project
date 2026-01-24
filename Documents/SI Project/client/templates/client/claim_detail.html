@@ -1,0 +1,98 @@
+{% extends 'client/base.html' %}
+{% load humanize %}
+
+{% block title %}Claim #{{ claim.id }}{% endblock %}
+{% block header %}Claim Details{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-secondary me-3">#{{ claim.id }}</span>
+                    <h5 class="mb-0">{{ claim.subject }}</h5>
+                </div>
+                <div>
+                     {% if claim.status == 'open' %}
+                        <span class="badge bg-warning bg-opacity-25 text-warning-emphasis px-3 py-2 rounded-pill">Open</span>
+                    {% elif claim.status == 'in_progress' %}
+                        <span class="badge bg-info bg-opacity-25 text-info-emphasis px-3 py-2 rounded-pill">In Progress</span>
+                    {% elif claim.status == 'resolved' %}
+                        <span class="badge bg-success bg-opacity-25 text-success-emphasis px-3 py-2 rounded-pill">Resolved</span>
+                    {% elif claim.status == 'rejected' %}
+                        <span class="badge bg-danger bg-opacity-25 text-danger-emphasis px-3 py-2 rounded-pill">Rejected</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="row mb-5">
+                    <div class="col-md-4">
+                         <small class="text-muted d-block text-uppercase">Priority</small>
+                         <span class="badge {% if claim.priority == 'high' %}bg-danger{% elif claim.priority == 'medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                             {{ claim.get_priority_display }}
+                         </span>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block text-uppercase">Filed On</small>
+                        <strong>{{ claim.filed_date|date:"M d, Y" }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block text-uppercase">Last Updated</small>
+                        <strong>{% if claim.resolved_date %}{{ claim.resolved_date|date:"M d, Y" }}{% else %}{{ claim.filed_date|date:"M d, Y" }}{% endif %}</strong>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <h6 class="text-muted border-bottom pb-2 mb-3">Description</h6>
+                    <p class="text-dark bg-light p-3 rounded">{{ claim.description|linebreaksbr }}</p>
+                </div>
+
+                <div class="mb-5">
+                     <h6 class="text-muted border-bottom pb-2 mb-3">Related Shipment</h6>
+                     {% if claim.shipment %}
+                        <div class="card bg-light border-0">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <strong>Shipment #{{ claim.shipment.shipment_number }}</strong>
+                                        <p class="mb-0 text-muted small">
+                                            {{ claim.shipment.client.city }} <i class="fas fa-arrow-right mx-1"></i> {{ claim.shipment.destination.city }}
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4 text-md-end">
+                                        <a href="{% url 'client:shipment_detail' claim.shipment.id %}" class="btn btn-sm btn-outline-primary">View Shipment</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                     {% else %}
+                        <p class="text-muted fst-italic">No specific shipment linked.</p>
+                     {% endif %}
+                </div>
+
+                <!-- Responses / Resolution -->
+                {% if claim.resolution %}
+                <div class="mb-4">
+                    <h6 class="text-muted border-bottom pb-2 mb-3">Resolution</h6>
+                    <div class="alert {% if claim.status == 'resolved' %}alert-success{% else %}alert-secondary{% endif %} border-0">
+                        <h6 class="alert-heading fw-bold"><i class="fas fa-check-circle me-2"></i>Admin Response</h6>
+                        <p class="mb-0">{{ claim.resolution }}</p>
+                        <hr>
+                        <small class="mb-0">Resolved on: {{ claim.resolved_date|date:"M d, Y" }}</small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-between py-3">
+                <a href="{% url 'client:claim_list' %}" class="btn btn-light border">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Claims
+                </a>
+                {% if claim.status == 'open' %}
+                    <span class="text-muted small align-self-center"><i class="fas fa-info-circle me-1"></i> You can edit this claim while it is still open.</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'manager/base.html' %}
+
+{% block title %}Tour Management - Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-route me-2"></i>Tour Management</h2>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <!-- Filters -->
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <form method="get">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        <option value="planned" {% if request.GET.status == 'planned' %}selected{% endif %}>Planned</option>
+                        <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </form>
+            </div>
+            <div class="col-md-3">
+                <form method="get">
+                    <input type="date" name="date" class="form-control"
+                           value="{{ request.GET.date }}" onchange="this.form.submit()" placeholder="Filter by date">
+                </form>
+            </div>
+            <div class="col-md-6 text-end">
+                <span class="text-muted">Total: {{ page_obj.paginator.count }} tours</span>
+            </div>
+        </div>
+
+        <!-- Tours Table -->
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tour Number</th>
+                            <th>Driver</th>
+                            <th>Vehicle</th>
+                            <th>Date</th>
+                            <th>Shipments</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tour in page_obj %}
+                            <tr>
+                                <td>{{ tour.tour_number }}</td>
+                                <td>{{ tour.driver.first_name }} {{ tour.driver.last_name }}</td>
+                                <td>{{ tour.vehicle.registration_number }}</td>
+                                <td>{{ tour.date|date:"M d, Y" }}</td>
+                                <td>{{ tour.total_shipments|default:0 }}</td>
+                                <td>
+                                    <span class="badge bg-{% if tour.status == 'completed' %}success{% elif tour.status == 'in_progress' %}primary{% else %}secondary{% endif %}">
+                                        {{ tour.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ tour.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                onclick="viewTourDetails({{ tour.pk }})">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                        {% if tour.status == 'planned' %}
+                                            <button class="btn btn-sm btn-outline-warning"
+                                                    onclick="updateTourStatus({{ tour.pk }})">
+                                                <i class="fas fa-edit"></i> Update
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav aria-label="Tour pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    Previous
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    Next
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-route fa-3x text-muted mb-3"></i>
+                <h4>No delivery tours found</h4>
+                <p class="text-muted">No tours match your current filters.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewTourDetails(tourId) {
+    // For now, just show an alert. In a full implementation, this would open a modal or redirect
+    alert('Tour details view for tour ID: ' + tourId + ' (Not implemented yet)');
+}
+
+function updateTourStatus(tourId) {
+    // For now, just show an alert. In a full implementation, this would open an update form
+    alert('Update tour status for tour ID: ' + tourId + ' (Not implemented yet)');
+}
+</script>
+{% endblock %}

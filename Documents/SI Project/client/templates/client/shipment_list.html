@@ -1,0 +1,127 @@
+{% extends 'client/base.html' %}
+{% load humanize %}
+
+{% block title %}My Shipments{% endblock %}
+{% block header %}My Shipments{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body">
+        <form action="{% url 'client:track_shipment' %}" method="post" class="row g-3 align-items-center">
+            {% csrf_token %}
+            <div class="col-md-9">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="tracking_number" class="form-control border-start-0" placeholder="Enter tracking number to quick track..." required>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search-location me-2"></i> Track
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Tracking #</th>
+                        <th>Created</th>
+                        <th>Recipient</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                        <th>Est. Delivery</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shipment in page_obj %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-primary">
+                            <a href="{% url 'client:shipment_detail' shipment.id %}" class="text-decoration-none">
+                                #{{ shipment.shipment_number }}
+                            </a>
+                        </td>
+                        <td>{{ shipment.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <div class="fw-bold">{{ shipment.recipient_name }}</div>
+                            <small class="text-muted">{{ shipment.recipient_phone }}</small>
+                        </td>
+                        <td>{{ shipment.destination.city }}, {{ shipment.destination.country }}</td>
+                        <td>
+                            {% if shipment.status == 'delivered' %}
+                                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">Delivered</span>
+                            {% elif shipment.status == 'in_transit' %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">In Transit</span>
+                            {% elif shipment.status == 'cancelled' %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill">Cancelled</span>
+                            {% else %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill">{{ shipment.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if shipment.estimated_delivery %}
+                                {{ shipment.estimated_delivery|date:"M d, Y" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'client:shipment_detail' shipment.id %}" class="btn btn-sm btn-outline-primary rounded-circle">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
+                                <p>No shipments found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    {% if page_obj.has_other_pages %}
+    <div class="card-footer bg-white py-3">
+        <nav>
+            <ul class="pagination justify-content-center mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                {% for i in page_obj.paginator.page_range %}
+                    {% if page_obj.number == i %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

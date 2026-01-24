@@ -1,0 +1,113 @@
+{% extends 'agent/base.html' %}
+
+{% block title %}Service Types - Agent Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-cogs me-2"></i>Service Types</h2>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <!-- Search and Filter -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <form method="get" class="d-flex">
+                    <input type="text" name="search" class="form-control me-2"
+                           placeholder="Search service types..." value="{{ request.GET.search }}">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+            <div class="col-md-6 text-end">
+                <span class="text-muted">Total: {{ page_obj.paginator.count }} service types</span>
+            </div>
+        </div>
+
+        <!-- Service Types Table -->
+        {% if object_list %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Delivery Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for service_type in object_list %}
+                            <tr>
+                                <td>{{ service_type.name }}</td>
+                                <td>{{ service_type.description|truncatechars:50 }}</td>
+                                <td>{{ service_type.delivery_time_days }} days</td>
+                                <td>
+                                    <span class="badge bg-{% if service_type.is_active %}success{% else %}secondary{% endif %}">
+                                        {% if service_type.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'agent:create_shipment' %}?service_type={{ service_type.pk }}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-plus"></i> Use
+                                        </a>
+                                        <a href="{% url 'agent:shipment_list' %}?service_type={{ service_type.pk }}"
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-box"></i> Shipments
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav aria-label="Service type pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                    Previous
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                    Next
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+                <h4>No service types found</h4>
+                <p class="text-muted">No service types are currently configured in the system.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

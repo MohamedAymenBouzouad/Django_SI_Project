@@ -1,0 +1,117 @@
+{% extends 'agent/base.html' %}
+
+{% block title %}Vehicle Management - Agent Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-car me-2"></i>Vehicle Management</h2>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <!-- Search and Filter -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <form method="get" class="d-flex">
+                    <input type="text" name="search" class="form-control me-2"
+                           placeholder="Search vehicles..." value="{{ request.GET.search }}">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+            <div class="col-md-6 text-end">
+                <span class="text-muted">Total: {{ page_obj.paginator.count }} vehicles</span>
+            </div>
+        </div>
+
+        <!-- Vehicles Table -->
+        {% if object_list %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Registration</th>
+                            <th>Type</th>
+                            <th>Brand & Model</th>
+                            <th>Capacity</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vehicle in object_list %}
+                            <tr>
+                                <td>{{ vehicle.registration_number }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ vehicle.get_type_display }}</span>
+                                </td>
+                                <td>{{ vehicle.brand }} {{ vehicle.model }}{% if vehicle.year %} ({{ vehicle.year }}){% endif %}</td>
+                                <td>
+                                    {% if vehicle.capacity_kg %}{{ vehicle.capacity_kg }}kg{% endif %}
+                                    {% if vehicle.capacity_kg and vehicle.capacity_m3 %} / {% endif %}
+                                    {% if vehicle.capacity_m3 %}{{ vehicle.capacity_m3 }}m³{% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if vehicle.status == 'available' %}success{% elif vehicle.status == 'in_use' %}primary{% else %}secondary{% endif %}">
+                                        {{ vehicle.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'agent:tour_list' %}?vehicle={{ vehicle.pk }}"
+                                           class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-route"></i> Tours
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav aria-label="Vehicle pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                    Previous
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                    Next
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                <h4>No vehicles found</h4>
+                <p class="text-muted">No vehicles are currently registered in the system.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
