@@ -1,0 +1,110 @@
+{% extends 'agent/base.html' %}
+
+{% block title %}Update Claim - {{ claim.claim_number }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>Update Claim {{ claim.claim_number }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Claim Details -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6>Claim Information</h6>
+                        <p><strong>Client:</strong> {{ claim.client.name }}</p>
+                        <p><strong>Subject:</strong> {{ claim.subject }}</p>
+                        <p><strong>Priority:</strong>
+                            <span class="badge bg-{% if claim.priority == 'high' %}danger{% elif claim.priority == 'medium' %}warning{% else %}secondary{% endif %}">
+                                {{ claim.get_priority_display }}
+                            </span>
+                        </p>
+                        <p><strong>Filed:</strong> {{ claim.filed_date|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Current Status</h6>
+                        <p><strong>Status:</strong>
+                            <span class="badge bg-{% if claim.status == 'resolved' or claim.status == 'closed' %}success{% elif claim.status == 'rejected' %}danger{% elif claim.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                                {{ claim.get_status_display }}
+                            </span>
+                        </p>
+                        {% if claim.assigned_to %}
+                            <p><strong>Assigned To:</strong> {{ claim.assigned_to.get_full_name }}</p>
+                        {% endif %}
+                        {% if claim.resolution_date %}
+                            <p><strong>Resolved:</strong> {{ claim.resolution_date|date:"M d, Y" }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if claim.description %}
+                    <div class="mb-4">
+                        <h6>Description</h6>
+                        <div class="border rounded p-3 bg-light">
+                            {{ claim.description }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Update Form -->
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Update Status *</label>
+                            <select name="status" class="form-select" required>
+                                <option value="">Select Status</option>
+                                <option value="open" {% if claim.status == 'open' %}selected{% endif %}>Open</option>
+                                <option value="in_progress" {% if claim.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="resolved" {% if claim.status == 'resolved' %}selected{% endif %}>Resolved</option>
+                                <option value="rejected" {% if claim.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                                <option value="closed" {% if claim.status == 'closed' %}selected{% endif %}>Closed</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Update Priority</label>
+                            <select name="priority" class="form-select">
+                                <option value="low" {% if claim.priority == 'low' %}selected{% endif %}>Low</option>
+                                <option value="medium" {% if claim.priority == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="high" {% if claim.priority == 'high' %}selected{% endif %}>High</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Resolution Notes</label>
+                        <textarea name="resolution" class="form-control" rows="4"
+                                  placeholder="Provide resolution details, actions taken, or rejection reasons...">{{ claim.resolution }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Internal Notes</label>
+                        <textarea name="internal_notes" class="form-control" rows="3"
+                                  placeholder="Internal notes for agent reference...">{{ claim.internal_notes }}</textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Status changes and resolution details will be visible to the client.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'agent:claims' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Claims
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Claim
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

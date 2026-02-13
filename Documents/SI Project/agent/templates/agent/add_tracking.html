@@ -1,0 +1,64 @@
+{% extends 'agent/base.html' %}
+
+{% block title %}Add Tracking Event - Shipment {{ shipment.shipment_number }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Add Tracking Event
+                </h5>
+                <small class="text-muted">Shipment: {{ shipment.shipment_number }}</small>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">New Status *</label>
+                            <select name="status" class="form-select" required>
+                                <option value="">Select Status</option>
+                                <option value="in_transit">In Transit</option>
+                                <option value="at_sorting_center">At Sorting Center</option>
+                                <option value="out_for_delivery">Out for Delivery</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="failed">Failed Delivery</option>
+                                <option value="returned">Returned</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Location *</label>
+                            <input type="text" name="location" class="form-control" required
+                                   placeholder="Current location of the shipment">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="3"
+                                  placeholder="Describe the current status and any additional details..."></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> This tracking event will be visible to the customer and will update the shipment's status.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'agent:shipment_detail' shipment.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Shipment
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Add Tracking Event
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

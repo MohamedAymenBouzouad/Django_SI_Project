@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Agent Dashboard - Logistics System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: #343a40;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,.75);
+            padding: 0.75rem 1rem;
+        }
+        .sidebar .nav-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,.1);
+        }
+        .sidebar .nav-link.active {
+            color: #fff;
+            background: #0d6efd;
+        }
+        .content-wrapper {
+            margin-left: 0;
+        }
+        @media (min-width: 768px) {
+            .content-wrapper {
+                margin-left: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <!-- Sidebar -->
+        <nav class="sidebar d-none d-md-block" style="width: 250px;">
+            <div class="p-3">
+                <h5 class="text-white mb-4">
+                    <i class="fas fa-user-tie me-2"></i>Agent Panel
+                </h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                           href="{% url 'agent:dashboard' %}">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'favorites' %}active{% endif %}"
+                           href="{% url 'agent:favorites' %}">
+                            <i class="fas fa-star me-2"></i>Favorites
+                        </a>
+                    </li>
+
+                    <!-- Tables Section -->
+                    <li class="nav-item mt-3">
+                        <h6 class="text-white-50 px-3 mb-2">DATA TABLES</h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'client' in request.resolver_match.url_name %}active{% endif %}"
+                           href="{% url 'agent:client_list' %}">
+                            <i class="fas fa-users me-2"></i>Clients
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'driver' in request.resolver_match.url_name %}active{% endif %}"
+                           href="{% url 'agent:driver_list' %}">
+                            <i class="fas fa-truck me-2"></i>Drivers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'vehicle' in request.resolver_match.url_name %}active{% endif %}"
+                           href="{% url 'agent:vehicle_list' %}">
+                            <i class="fas fa-car me-2"></i>Vehicles
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'destination' in request.resolver_match.url_name %}active{% endif %}"
+                           href="{% url 'agent:destination_list' %}">
+                            <i class="fas fa-map-marker-alt me-2"></i>Destinations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'service' in request.resolver_match.url_name %}active{% endif %}"
+                           href="{% url 'agent:service_type_list' %}">
+                            <i class="fas fa-cogs me-2"></i>Service Types
+                        </a>
+                    </li>
+
+                    <!-- Operations Section -->
+                    <li class="nav-item mt-3">
+                        <h6 class="text-white-50 px-3 mb-2">OPERATIONS</h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'shipment' in request.resolver_match.url_name and request.resolver_match.url_name != 'create_shipment' %}active{% endif %}"
+                           href="{% url 'agent:shipment_list' %}">
+                            <i class="fas fa-box me-2"></i>Shipments
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'create_shipment' %}active{% endif %}"
+                           href="{% url 'agent:create_shipment' %}">
+                            <i class="fas fa-plus-circle me-2"></i>New Shipment
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'tour' in request.resolver_match.url_name %}active{% endif %}"
+                           href="{% url 'agent:tour_list' %}">
+                            <i class="fas fa-route me-2"></i>Delivery Tours
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'invoice' in request.resolver_match.url_name %}active{% endif %}"
+                           href="{% url 'agent:invoice_list' %}">
+                            <i class="fas fa-file-invoice me-2"></i>Invoices
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'create_invoice' %}active{% endif %}"
+                           href="{% url 'agent:create_invoice' %}">
+                            <i class="fas fa-plus me-2"></i>New Invoice
+                        </a>
+                    </li>
+
+                    <!-- Issues Section -->
+                    <li class="nav-item mt-3">
+                        <h6 class="text-white-50 px-3 mb-2">ISSUES</h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'incident' in request.resolver_match.url_name %}active{% endif %}"
+                           href="{% url 'agent:report_incident' %}">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Report Incident
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'claim' in request.resolver_match.url_name %}active{% endif %}"
+                           href="{% url 'agent:claims' %}">
+                            <i class="fas fa-comments me-2"></i>Claims
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="content-wrapper flex-grow-1">
+            <!-- Top Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+                <div class="container-fluid">
+                    <button class="btn btn-outline-secondary d-md-none me-2" type="button"
+                            onclick="document.querySelector('.sidebar').classList.toggle('d-none')">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <div class="ms-auto d-flex align-items-center">
+                        <span class="me-3">Welcome, <strong>{{ user.get_full_name|default:user.username }}</strong></span>
+                        <a href="{% url 'agent:dashboard' %}" class="btn btn-outline-primary btn-sm me-2">
+                            <i class="fas fa-home"></i>
+                        </a>
+                        <a href="/auth/logout/" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Page Content -->
+            <div class="container-fluid py-4">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

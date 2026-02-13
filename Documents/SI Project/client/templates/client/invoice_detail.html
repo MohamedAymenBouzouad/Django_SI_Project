@@ -1,0 +1,168 @@
+{% extends 'client/base.html' %}
+{% load humanize %}
+
+{% block title %}Invoice #{{ invoice.invoice_number }}{% endblock %}
+{% block header %}Invoice Details{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card mb-4" id="invoiceArea">
+            <div class="card-body p-5">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <div>
+                        <h2 class="mb-1 text-primary fw-bold">INVOICE</h2>
+                        <p class="text-muted mb-0">#{{ invoice.invoice_number }}</p>
+                    </div>
+                    <div class="text-end">
+                        {% if invoice.status == 'paid' %}
+                            <h2 class="text-success border border-success px-4 py-2 rounded d-inline-block rotate-stamp transform">PAID</h2>
+                        {% elif invoice.status == 'overdue' %}
+                            <h2 class="text-danger border border-danger px-4 py-2 rounded d-inline-block rotate-stamp transform">OVERDUE</h2>
+                        {% else %}
+                             <h4 class="text-warning border border-warning px-3 py-1 rounded d-inline-block">PENDING</h4>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- From / To -->
+                <div class="row mb-5">
+                    <div class="col-sm-6">
+                        <h6 class="text-uppercase text-muted fw-bold mb-3">From:</h6>
+                        <h5>LogiTrans Global</h5>
+                        <p class="text-muted">
+                            123 Logistics Way<br>
+                            Transport City, TC 90210<br>
+                            support@logitrans.com
+                        </p>
+                    </div>
+                    <div class="col-sm-6 text-sm-end">
+                        <h6 class="text-uppercase text-muted fw-bold mb-3">To:</h6>
+                        <h5>{{ client.company_name|default:client.auth_user.get_full_name }}</h5>
+                        <p class="text-muted">
+                            {{ client.address }}<br>
+                            {{ client.city }}, {{ client.country }}<br>
+                            {{ client.auth_user.email }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Dates -->
+                <div class="row mb-5 bg-light p-4 rounded">
+                    <div class="col-md-4">
+                        <span class="text-muted d-block small text-uppercase">Issue Date</span>
+                        <strong>{{ invoice.issue_date|date:"F d, Y" }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="text-muted d-block small text-uppercase">Due Date</span>
+                        <strong>{{ invoice.due_date|date:"F d, Y" }}</strong>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <span class="text-muted d-block small text-uppercase">Amount Due</span>
+                        <h4 class="text-primary mb-0">${{ invoice.balance_due|floatformat:2|intcomma }}</h4>
+                    </div>
+                </div>
+
+                <!-- Line Items (If any, or just main amount) -->
+                <!-- Assuming invoice model might have items, otherwise just show total -->
+                <div class="table-responsive mb-4">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr class="bg-dark text-white">
+                                <th class="py-3 ps-4 rounded-start">Description</th>
+                                <th class="py-3 text-end rounded-end pe-4">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="ps-4">Logistics Services - Invoice Ref #{{ invoice.invoice_number }}</td>
+                                <td class="text-end pe-4">${{ invoice.total_amount|floatformat:2|intcomma }}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th class="text-end pe-4 py-3">Total</th>
+                                <th class="text-end pe-4 py-3">${{ invoice.total_amount|floatformat:2|intcomma }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments History -->
+        {% if payments %}
+        <div class="card mb-4">
+             <div class="card-header bg-white">
+                <h5 class="mb-0">Payment History</h5>
+             </div>
+             <div class="card-body p-0">
+                 <table class="table table-hover mb-0">
+                     <thead class="bg-light">
+                         <tr>
+                             <th class="ps-4">Date</th>
+                             <th>Method</th>
+                             <th>Reference</th>
+                             <th class="text-end pe-4">Amount</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         {% for payment in payments %}
+                         <tr>
+                             <td class="ps-4">{{ payment.payment_date|date:"M d, Y" }}</td>
+                             <td>{{ payment.payment_method|title }}</td>
+                             <td>{{ payment.transaction_id|default:"-" }}</td>
+                             <td class="text-end pe-4 text-success">-${{ payment.amount|floatformat:2|intcomma }}</td>
+                         </tr>
+                         {% endfor %}
+                     </tbody>
+                 </table>
+             </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="d-flex justify-content-end gap-2 mb-5">
+            <a href="{% url 'client:invoice_list' %}" class="btn btn-light border">
+                <i class="fas fa-arrow-left me-2"></i> Back
+            </a>
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="fas fa-print me-2"></i> Print
+            </button>
+            {% if invoice.status != 'paid' %}
+            <button class="btn btn-primary">
+                <i class="fas fa-credit-card me-2"></i> Pay Now
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #invoiceArea, #invoiceArea * {
+            visibility: visible;
+        }
+        #invoiceArea {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            box-shadow: none;
+            border: none;
+        }
+        .sidebar, .top-navbar, .btn {
+            display: none !important;
+        }
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>
+{% endblock %}

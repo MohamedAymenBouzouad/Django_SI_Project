@@ -1,0 +1,117 @@
+{% extends 'agent/base.html' %}
+
+{% block title %}Create New Shipment - Agent Dashboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Shipment
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Client *</label>
+                            <select name="client" class="form-select" required>
+                                <option value="">Select Client</option>
+                                {% for client in clients %}
+                                    <option value="{{ client.pk }}">{{ client.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Service Type *</label>
+                            <select name="service_type" class="form-select" required>
+                                <option value="">Select Service Type</option>
+                                {% for service_type in service_types %}
+                                    <option value="{{ service_type.pk }}">{{ service_type.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Destination *</label>
+                            <select name="destination" class="form-select" required>
+                                <option value="">Select Destination</option>
+                                {% for destination in destinations %}
+                                    <option value="{{ destination.pk }}">{{ destination.city }}, {{ destination.country }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Weight (kg) *</label>
+                            <input type="number" name="weight" class="form-control" step="0.01" min="0" required>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Volume (m³)</label>
+                            <input type="number" name="volume" class="form-control" step="0.001" min="0">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description *</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Package description..." required></textarea>
+                    </div>
+
+                    <h6 class="border-bottom pb-2 mt-4">Sender</h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Sender Name *</label>
+                            <input type="text" name="sender_name" class="form-control" required placeholder="Full name">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Sender Phone *</label>
+                            <input type="text" name="sender_phone" class="form-control" required placeholder="Phone">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Sender Address *</label>
+                            <input type="text" name="sender_address" class="form-control" required placeholder="Address">
+                        </div>
+                    </div>
+
+                    <h6 class="border-bottom pb-2 mt-2">Recipient</h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Recipient Name *</label>
+                            <input type="text" name="recipient_name" class="form-control" required placeholder="Full name">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Recipient Phone *</label>
+                            <input type="text" name="recipient_phone" class="form-control" required placeholder="Phone">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Recipient Address *</label>
+                            <input type="text" name="recipient_address" class="form-control" required placeholder="Address">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Pricing Information:</strong> Amount will be calculated automatically based on weight, volume, and destination rates.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'agent:dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Create Shipment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

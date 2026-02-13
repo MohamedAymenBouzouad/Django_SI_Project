@@ -1,0 +1,96 @@
+{% extends 'agent/base.html' %}
+
+{% block title %}Create Delivery Tour - Agent Dashboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-route me-2"></i>Create New Delivery Tour
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Driver *</label>
+                            <select name="driver" class="form-select" required>
+                                <option value="">Select Driver</option>
+                                {% for driver in drivers %}
+                                    {% if driver.availability == 'available' %}
+                                        <option value="{{ driver.pk }}">{{ driver.first_name }} {{ driver.last_name }} ({{ driver.license_number }})</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Vehicle *</label>
+                            <select name="vehicle" class="form-select" required>
+                                <option value="">Select Vehicle</option>
+                                {% for vehicle in vehicles %}
+                                    {% if vehicle.status == 'available' %}
+                                        <option value="{{ vehicle.pk }}">{{ vehicle.registration_number }} - {{ vehicle.brand }} {{ vehicle.model }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date *</label>
+                            <input type="date" name="date" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tour Notes</label>
+                            <textarea name="notes" class="form-control" rows="2" placeholder="Additional notes..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Select Shipments to Include *</label>
+                        {% if available_shipments %}
+                            <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                {% for shipment in available_shipments %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="shipments" value="{{ shipment.pk }}" id="shipment_{{ shipment.pk }}">
+                                        <label class="form-check-label" for="shipment_{{ shipment.pk }}">
+                                            <strong>{{ shipment.shipment_number }}</strong> -
+                                            {{ shipment.client.name }} →
+                                            {{ shipment.destination.city }}, {{ shipment.destination.country }}
+                                            ({{ shipment.weight }}kg)
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text">
+                                <small class="text-muted">Selected shipments will be assigned to this delivery tour.</small>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                No available shipments found for tour creation.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'agent:dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary" {% if not available_shipments %}disabled{% endif %}>
+                            <i class="fas fa-save me-2"></i>Create Delivery Tour
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
