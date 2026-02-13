@@ -1,0 +1,203 @@
+{% extends 'manager/base.html' %}
+
+{% block title %}System Reports - Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-file-alt me-2"></i>System Reports</h2>
+</div>
+
+<div class="row">
+    <!-- Report Types -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Available Reports</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'manager:system_reports' %}?type=summary" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-pie me-2"></i>System Summary
+                    </a>
+                    <a href="{% url 'manager:system_reports' %}?type=clients" class="btn btn-outline-success">
+                        <i class="fas fa-users me-2"></i>Client Performance
+                    </a>
+                    <a href="{% url 'manager:system_reports' %}?type=drivers" class="btn btn-outline-info">
+                        <i class="fas fa-truck me-2"></i>Driver Performance
+                    </a>
+                    <a href="{% url 'manager:system_reports' %}?type=shipments" class="btn btn-outline-warning">
+                        <i class="fas fa-box me-2"></i>Shipment Analysis
+                    </a>
+                    <a href="{% url 'manager:system_reports' %}?type=incidents" class="btn btn-outline-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Incident Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Options -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">Export Options</h6>
+            </div>
+            <div class="card-body">
+                <button class="btn btn-outline-secondary w-100 mb-2" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf me-2"></i>Export as PDF
+                </button>
+                <button class="btn btn-outline-secondary w-100 mb-2" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel me-2"></i>Export as Excel
+                </button>
+                <button class="btn btn-outline-secondary w-100" onclick="exportReport('csv')">
+                    <i class="fas fa-file-csv me-2"></i>Export as CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Content -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {% if report_type == 'summary' %}System Summary Report{% endif %}
+                    {% if report_type == 'clients' %}Client Performance Report{% endif %}
+                    {% if report_type == 'drivers' %}Driver Performance Report{% endif %}
+                    {% if report_type == 'shipments' %}Shipment Analysis Report{% endif %}
+                    {% if report_type == 'incidents' %}Incident Report{% endif %}
+                </h5>
+                <small class="text-muted">Generated on {{ now|date:"M d, Y H:i" }}</small>
+            </div>
+            <div class="card-body">
+                {% if report_type == 'summary' or not report_type %}
+                    <!-- System Summary -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Shipment Statistics</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td>Total Shipments:</td>
+                                    <td class="text-end"><strong>{{ stats.total_shipments }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Delivered:</td>
+                                    <td class="text-end"><strong>{{ stats.delivered_shipments }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>In Transit:</td>
+                                    <td class="text-end"><strong>{{ stats.in_transit_shipments }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Success Rate:</td>
+                                    <td class="text-end"><strong>{{ stats.success_rate|floatformat:1 }}%</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Financial Overview</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td>Total Revenue:</td>
+                                    <td class="text-end"><strong>{{ stats.total_revenue|floatformat:0 }} DA</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Pending Payments:</td>
+                                    <td class="text-end"><strong>{{ stats.pending_payments|floatformat:0 }} DA</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Active Clients:</td>
+                                    <td class="text-end"><strong>{{ stats.active_clients }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Active Drivers:</td>
+                                    <td class="text-end"><strong>{{ stats.active_drivers }}</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                {% elif report_type == 'clients' %}
+                    <!-- Client Performance -->
+                    {% if clients %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Shipments</th>
+                                        <th>Total Spent</th>
+                                        <th>Last Activity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for client in clients %}
+                                        <tr>
+                                            <td>{{ client.name }}</td>
+                                            <td>{{ client.shipment_count }}</td>
+                                            <td>{{ client.total_spent|floatformat:0 }} DA</td>
+                                            <td>{{ client.last_shipment_date|date:"M d, Y" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No client data available.</p>
+                    {% endif %}
+
+                {% elif report_type == 'drivers' %}
+                    <!-- Driver Performance -->
+                    {% if drivers %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Driver</th>
+                                        <th>Tours Completed</th>
+                                        <th>Shipments Delivered</th>
+                                        <th>Success Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for driver in drivers %}
+                                        <tr>
+                                            <td>{{ driver.first_name }} {{ driver.last_name }}</td>
+                                            <td>{{ driver.tours_completed }}</td>
+                                            <td>{{ driver.shipments_delivered }}</td>
+                                            <td>{{ driver.success_rate|floatformat:1 }}%</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No driver performance data available.</p>
+                    {% endif %}
+
+                {% elif report_type == 'shipments' %}
+                    <!-- Shipment Analysis -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Shipment Status Distribution</h6>
+                            <canvas id="statusChart" width="200" height="200"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Monthly Trends</h6>
+                            <canvas id="monthlyChart" width="200" height="200"></canvas>
+                        </div>
+                    </div>
+
+                {% elif report_type == 'incidents' %}
+                    <!-- Incident Report -->
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Incident Analysis:</strong> {{ stats.open_incidents }} open incidents require attention.
+                    </div>
+                    <p>Detailed incident analysis would be shown here.</p>
+
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

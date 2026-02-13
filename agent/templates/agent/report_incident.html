@@ -1,0 +1,111 @@
+{% extends 'agent/base.html' %}
+
+{% block title %}Report Incident - Agent Dashboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Report New Incident
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Incident Type *</label>
+                            <select name="type" class="form-select" required>
+                                <option value="">Select Type</option>
+                                <option value="delay">Delivery Delay</option>
+                                <option value="damage">Package Damage</option>
+                                <option value="loss">Package Loss</option>
+                                <option value="theft">Package Theft</option>
+                                <option value="vehicle_issue">Vehicle Issue</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Severity</label>
+                            <select name="severity" class="form-select">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Related Shipment</label>
+                            <select name="shipment" class="form-select">
+                                <option value="">Select Shipment (Optional)</option>
+                                {% for shipment in shipments %}
+                                    <option value="{{ shipment.pk }}" {% if request.GET.shipment == shipment.pk|stringformat:"s" %}selected{% endif %}>
+                                        {{ shipment.shipment_number }} - {{ shipment.client.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Related Tour</label>
+                            <select name="tour" class="form-select">
+                                <option value="">Select Tour (Optional)</option>
+                                {% for tour in tours %}
+                                    <option value="{{ tour.pk }}">
+                                        Tour #{{ tour.pk }} - {{ tour.driver.first_name }} {{ tour.driver.last_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Location</label>
+                        <input type="text" name="location" class="form-control"
+                               placeholder="Where did the incident occur?" value="{{ request.GET.location }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Incident Description *</label>
+                        <textarea name="description" class="form-control" rows="4" required
+                                  placeholder="Please provide detailed information about the incident..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Actions Taken</label>
+                        <textarea name="actions_taken" class="form-control" rows="3"
+                                  placeholder="Describe any actions taken to resolve or mitigate the incident..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Witness Information</label>
+                        <textarea name="witness_info" class="form-control" rows="2"
+                                  placeholder="Any witnesses or additional contacts..."></textarea>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Important:</strong> All incidents will be reviewed by management. Please provide as much detail as possible to ensure proper resolution.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'agent:dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Report Incident
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

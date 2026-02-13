@@ -1,0 +1,189 @@
+{% extends 'agent/base.html' %}
+
+{% block title %}Shipment {{ object.shipment_number }} - Agent Dashboard{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-box me-2"></i>Shipment {{ object.shipment_number }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Client Information</h6>
+                        <p><strong>Name:</strong> {{ object.client.name }}</p>
+                        <p><strong>Email:</strong> {{ object.client.email }}</p>
+                        <p><strong>Phone:</strong> {{ object.client.phone }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Shipment Details</h6>
+                        <p><strong>Service:</strong> {{ object.service_type.name }}</p>
+                        <p><strong>Destination:</strong> {{ object.destination.city }}, {{ object.destination.country }}</p>
+                        <p><strong>Weight:</strong> {{ object.weight }}kg</p>
+                        {% if object.volume %}
+                            <p><strong>Volume:</strong> {{ object.volume }}m³</p>
+                        {% endif %}
+                        <p><strong>Amount:</strong> {{ object.amount }} DA</p>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6>Status & Timeline</h6>
+                        <p><strong>Current Status:</strong>
+                            <span class="badge bg-{% if object.status == 'delivered' %}success{% elif object.status == 'in_transit' or object.status == 'out_for_delivery' %}primary{% elif object.status == 'failed' %}danger{% else %}secondary{% endif %}">
+                                {{ object.get_status_display }}
+                            </span>
+                        </p>
+                        <p><strong>Created:</strong> {{ object.created_at|date:"M d, Y H:i" }}</p>
+                        {% if object.estimated_delivery %}
+                            <p><strong>Estimated Delivery:</strong> {{ object.estimated_delivery|date:"M d, Y" }}</p>
+                        {% endif %}
+                        {% if object.actual_delivery %}
+                            <p><strong>Actual Delivery:</strong> {{ object.actual_delivery|date:"M d, Y H:i" }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if object.description %}
+                            <h6>Description</h6>
+                            <p>{{ object.description }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracking History -->
+        {% if object.tracking_events.all %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Tracking History
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for event in object.tracking_events.all %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-primary"></div>
+                                <div class="timeline-content">
+                                    <h6>{{ event.status|title }}</h6>
+                                    <p class="text-muted mb-1">{{ event.timestamp|date:"M d, Y H:i" }}</p>
+                                    {% if event.location %}
+                                        <p class="mb-1"><strong>Location:</strong> {{ event.location }}</p>
+                                    {% endif %}
+                                    {% if event.notes %}
+                                        <p class="mb-0">{{ event.notes }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                {% if object.status != 'delivered' and object.status != 'failed' %}
+                    <a href="{% url 'agent:add_tracking' object.pk %}" class="btn btn-success w-100 mb-2">
+                        <i class="fas fa-plus me-2"></i>Add Tracking Event
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'agent:create_invoice' %}?client={{ object.client.pk }}" class="btn btn-warning w-100 mb-2">
+                    <i class="fas fa-file-invoice me-2"></i>Create Invoice
+                </a>
+
+                <a href="{% url 'agent:report_incident' %}?shipment={{ object.pk }}" class="btn btn-danger w-100 mb-2">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Report Incident
+                </a>
+
+                <a href="{% url 'agent:shipment_list' %}" class="btn btn-secondary w-100">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Shipments
+                </a>
+            </div>
+        </div>
+
+        <!-- Shipment Actions -->
+        {% if object.status != 'delivered' and object.status != 'failed_delivery' %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Update Status</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'agent:add_tracking' object.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">New Status</label>
+                            <select name="status" class="form-select" required>
+                                <option value="">Select Status</option>
+                                <option value="in_transit">In Transit</option>
+                                <option value="at_sorting_center">At Sorting Center</option>
+                                <option value="out_for_delivery">Out for Delivery</option>
+                                <option value="delivered">Delivered</option>
+                                <option value="failed">Failed Delivery</option>
+                                <option value="returned">Returned</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Location</label>
+                            <input type="text" name="location" class="form-control" placeholder="Current location">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea name="notes" class="form-control" rows="2" placeholder="Additional notes"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-save me-2"></i>Update Status
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -25px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 17px;
+    width: 2px;
+    height: calc(100% + 3px);
+    background: #dee2e6;
+}
+</style>
+{% endblock %}

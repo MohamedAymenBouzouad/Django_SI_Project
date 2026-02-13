@@ -1,0 +1,228 @@
+{% extends 'manager/base.html' %}
+
+{% block title %}Manager Dashboard - Logistics System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- System Statistics Cards -->
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-1">{{ system_stats.total_shipments }}</h5>
+                        <p class="card-text mb-0">Total Shipments</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-box fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-1">{{ system_stats.delivered_shipments }}</h5>
+                        <p class="card-text mb-0">Delivered</p>
+                        <small class="text-white-50">{{ system_stats.success_rate|floatformat:1 }}% success rate</small>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-1">{{ system_stats.total_revenue|floatformat:0 }}</h5>
+                        <p class="card-text mb-0">Total Revenue (DA)</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-1">{{ system_stats.open_incidents }}</h5>
+                        <p class="card-text mb-0">Open Incidents</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Active Clients</h6>
+                <h3 class="text-primary">{{ system_stats.active_clients }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Active Drivers</h6>
+                <h3 class="text-success">{{ system_stats.active_drivers }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted">In Transit</h6>
+                <h3 class="text-warning">{{ system_stats.in_transit_shipments }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Pending Payments</h6>
+                <h3 class="text-danger">{{ system_stats.pending_payments|floatformat:0 }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>Recent Shipments
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_shipments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Client</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for shipment in recent_shipments %}
+                                    <tr>
+                                        <td>{{ shipment.shipment_number }}</td>
+                                        <td>{{ shipment.client.name }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if shipment.status == 'delivered' %}success{% elif shipment.status == 'in_transit' or shipment.status == 'out_for_delivery' %}primary{% elif shipment.status == 'failed_delivery' %}danger{% else %}secondary{% endif %}">
+                                                {{ shipment.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ shipment.created_at|date:"M d, Y H:i" }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">No recent shipments</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No recent shipments to display.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Recent Incidents
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_incidents %}
+                    {% for incident in recent_incidents %}
+                        <div class="border-bottom pb-2 mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <small class="text-muted">{{ incident.reported_date|date:"M d, H:i" }}</small>
+                                    <p class="mb-1">{{ incident.title }}</p>
+                                </div>
+                                <span class="badge bg-{% if incident.status == 'resolved' %}success{% elif incident.status == 'investigating' %}warning{% else %}secondary{% endif %}">
+                                    {{ incident.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No recent incidents.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Access
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{% url 'manager:commercial_analytics' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
+                            Commercial Analytics
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'manager:operational_analytics' %}" class="btn btn-success w-100">
+                            <i class="fas fa-cogs fa-2x d-block mb-2"></i>
+                            Operational Analytics
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'manager:shipment_management' %}" class="btn btn-warning w-100">
+                            <i class="fas fa-box fa-2x d-block mb-2"></i>
+                            Manage Shipments
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'manager:system_reports' %}" class="btn btn-danger w-100">
+                            <i class="fas fa-file-alt fa-2x d-block mb-2"></i>
+                            System Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

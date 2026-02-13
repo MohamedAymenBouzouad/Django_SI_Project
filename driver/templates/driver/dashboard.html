@@ -1,0 +1,217 @@
+{% extends 'driver/base.html' %}
+
+{% block title %}Dashboard - Driver Portal{% endblock %}
+
+{% block content %}
+<style>
+    .stat-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .stat-card h6 {
+        color: #6c757d;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-card h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0;
+        color: #212529;
+    }
+    
+    .stat-card.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .stat-card.primary h6 {
+        color: rgba(255,255,255,0.7);
+    }
+    
+    .tour-item {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        transition: background 0.2s;
+    }
+    
+    .tour-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .tour-item:last-child {
+        border-bottom: none;
+    }
+    
+    .btn-action {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.85rem;
+        border-radius: 5px;
+    }
+</style>
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-2"><i class="fas fa-tachometer-alt me-2"></i>Driver Dashboard</h2>
+            <p class="text-muted mb-0">Welcome, {{ user.get_full_name }}</p>
+        </div>
+        <div class="text-end">
+            <small class="d-block text-muted">Driver ID: {{ driver.driver_id }}</small>
+            <small class="d-block text-muted">License: {{ driver.license_number }}</small>
+            <small class="d-block text-muted">Status: <span class="badge bg-{% if driver.availability == 'available' %}success{% else %}warning{% endif %}">{{ driver.get_availability_display }}</span></small>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Stats -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card primary">
+            <div class="card-body text-center">
+                <h6>Today's Deliveries</h6>
+                <h2>{{ performance.delivered }}/{{ performance.total }}</h2>
+                <small>{{ performance.completion_rate|floatformat:1 }}% Complete</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <h6>Active Tours</h6>
+                <h2>{{ active_tours.count }}</h2>
+                <small class="text-muted">Assigned to you</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <h6>Pending Deliveries</h6>
+                <h2>{{ pending_deliveries }}</h2>
+                <small class="text-muted">Out for delivery</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stat-card">
+            <div class="card-body text-center">
+                <h6>Current Location</h6>
+                <h2>
+                    {% if driver.current_latitude %}
+                        <i class="fas fa-map-marker-alt"></i>
+                    {% else %}
+                        <i class="fas fa-location-slash"></i>
+                    {% endif %}
+                </h2>
+                <small class="text-muted">
+                    {% if driver.last_location_timestamp %}
+                        Updated {{ driver.last_location_timestamp|timesince }} ago
+                    {% else %}
+                        Not updated
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Tour -->
+{% if current_tour %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-route me-2"></i>Current Tour In Progress
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Tour Number:</strong> {{ current_tour.tour_number }}</p>
+                            <p><strong>Vehicle:</strong> {{ current_tour.vehicle.plate_number }} - {{ current_tour.vehicle.vehicle_type }}</p>
+                            <p><strong>Start Time:</strong> {{ current_tour.actual_start_time|time:"H:i" }}</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <p><strong>Shipments:</strong> {{ current_tour.shipments.count }} items</p>
+                            <p><strong>Status:</strong> <span class="badge bg-warning">{{ current_tour.get_status_display }}</span></p>
+                            <a href="{% url 'driver:tour_detail' current_tour.id %}" class="btn btn-sm btn-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Active Tours List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Your Tours
+                    <span class="badge bg-primary float-end">{{ active_tours.count }}</span>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if active_tours %}
+                    {% for tour in active_tours %}
+                        <div class="tour-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 class="mb-1 text-primary"><i class="fas fa-route me-2"></i>{{ tour.tour_number }}</h6>
+                                    <p class="mb-2 text-muted">
+                                        <i class="fas fa-calendar me-1"></i>{{ tour.date|date:"M d, Y" }}
+                                        <i class="fas fa-cube ms-3 me-1"></i>{{ tour.shipments.count }} shipments
+                                    </p>
+                                    <p class="mb-0">
+                                        <small class="text-muted">
+                                            Vehicle: <strong>{{ tour.vehicle.plate_number }}</strong>
+                                        </small>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <span class="badge badge-status badge-{{ tour.status }}">
+                                        {{ tour.get_status_display }}
+                                    </span>
+                                    <div class="mt-2">
+                                        {% if tour.status == 'planned' %}
+                                            <a href="{% url 'driver:start_tour' tour.id %}" class="btn btn-sm btn-success btn-action">
+                                                <i class="fas fa-play me-1"></i>Start Tour
+                                            </a>
+                                        {% elif tour.status == 'in_progress' %}
+                                            <a href="{% url 'driver:tour_detail' tour.id %}" class="btn btn-sm btn-primary btn-action">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                            <a href="{% url 'driver:complete_tour' tour.id %}" class="btn btn-sm btn-warning btn-action">
+                                                <i class="fas fa-check me-1"></i>Complete
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'driver:tour_detail' tour.id %}" class="btn btn-sm btn-secondary btn-action">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                        <p>No active tours assigned. Check back soon!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+  </body>
+</html>

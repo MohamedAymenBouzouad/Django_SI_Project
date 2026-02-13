@@ -1,0 +1,170 @@
+{% extends 'agent/base.html' %}
+
+{% block title %}Agent Dashboard - Logistics System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Statistics Cards -->
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-1">{{ pending_shipments }}</h5>
+                        <p class="card-text mb-0">Pending Shipments</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-box fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-1">{{ active_tours }}</h5>
+                        <p class="card-text mb-0">Active Tours</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-route fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-1">{{ pending_invoices }}</h5>
+                        <p class="card-text mb-0">Pending Invoices</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-file-invoice fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-1">{{ open_incidents }}</h5>
+                        <p class="card-text mb-0">Open Incidents</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Shipments -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>Recent Shipments
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_shipments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Client</th>
+                                    <th>Destination</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for shipment in recent_shipments %}
+                                    <tr>
+                                        <td>{{ shipment.shipment_number }}</td>
+                                        <td>{{ shipment.client.name }}</td>
+                                        <td>{{ shipment.destination.city }}, {{ shipment.destination.country }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if shipment.status == 'delivered' %}success{% elif shipment.status == 'in_transit' %}primary{% else %}secondary{% endif %}">
+                                                {{ shipment.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ shipment.created_at|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            <a href="{% url 'agent:shipment_detail' shipment.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">No recent shipments</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No recent shipments to display.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{% url 'agent:create_shipment' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus-circle fa-2x d-block mb-2"></i>
+                            New Shipment
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'agent:create_tour' %}" class="btn btn-success w-100">
+                            <i class="fas fa-route fa-2x d-block mb-2"></i>
+                            Create Tour
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'agent:create_invoice' %}" class="btn btn-warning w-100">
+                            <i class="fas fa-file-invoice fa-2x d-block mb-2"></i>
+                            Create Invoice
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'agent:report_incident' %}" class="btn btn-danger w-100">
+                            <i class="fas fa-exclamation-triangle fa-2x d-block mb-2"></i>
+                            Report Incident
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

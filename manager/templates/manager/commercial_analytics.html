@@ -1,0 +1,332 @@
+{% extends 'manager/base.html' %}
+
+{% block title %}Commercial Analytics - Manager Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    .analytics-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .stat-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .stat-card .card-header {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .client-item {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        transition: background 0.2s;
+    }
+    
+    .client-item:hover {
+        background: #f8f9fa;
+    }
+    
+    .client-item:last-child {
+        border-bottom: none;
+    }
+    
+    .growth-positive {
+        color: #28a745;
+        font-weight: 600;
+    }
+    
+    .growth-negative {
+        color: #dc3545;
+        font-weight: 600;
+    }
+    
+    .growth-neutral {
+        color: #6c757d;
+    }
+    
+    .summary-card {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .summary-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .summary-card h4 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .badge-rank {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+</style>
+
+<div class="analytics-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-2"><i class="fas fa-chart-bar me-2"></i>Commercial Analytics</h2>
+            <p class="mb-0 opacity-75">Comprehensive business performance insights</p>
+        </div>
+        <div class="text-end">
+            <small class="d-block opacity-75">Analysis Period</small>
+            <strong>{{ date_range.start|date:"M Y" }} - {{ date_range.end|date:"M Y" }}</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="summary-card bg-gradient-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-alt fa-2x mb-2 opacity-75"></i>
+                <h4>{{ monthly_data|length|default:0 }}</h4>
+                <p class="mb-0">Months Analyzed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="summary-card bg-gradient-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2 opacity-75"></i>
+                <h4>{{ top_clients_volume|length|default:0 }}</h4>
+                <p class="mb-0">Active Clients</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="summary-card bg-gradient-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-map-marked-alt fa-2x mb-2 opacity-75"></i>
+                <h4>{{ top_destinations|length|default:0 }}</h4>
+                <p class="mb-0">Destinations Served</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="summary-card bg-gradient-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-dollar-sign fa-2x mb-2 opacity-75"></i>
+                <h4>
+                    {% if monthly_data %}
+                        {% for data in monthly_data %}
+                            {% if forloop.last %}
+                                {{ data.revenue|floatformat:0 }}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}0{% endif %}
+                </h4>
+                <p class="mb-0">Latest Month Revenue (DA)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Trends -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card stat-card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Monthly Performance Trends</h5>
+            </div>
+            <div class="card-body">
+                {% if monthly_data %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><i class="fas fa-calendar me-1"></i>Month</th>
+                                    <th><i class="fas fa-box me-1"></i>Shipments</th>
+                                    <th><i class="fas fa-money-bill-wave me-1"></i>Revenue (DA)</th>
+                                    <th><i class="fas fa-chart-line me-1"></i>Growth</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in monthly_data %}
+                                    <tr>
+                                        <td><strong>{{ data.month }}</strong></td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ data.shipments }}</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ data.revenue|floatformat:0 }}</strong> DA
+                                        </td>
+                                        <td>
+                                            {% if data.growth_pct is not None %}
+                                                {% if data.growth_pct > 0 %}
+                                                    <span class="growth-positive">
+                                                        <i class="fas fa-arrow-up"></i> +{{ data.growth_pct|floatformat:1 }}%
+                                                    </span>
+                                                {% elif data.growth_pct < 0 %}
+                                                    <span class="growth-negative">
+                                                        <i class="fas fa-arrow-down"></i> {{ data.growth_pct|floatformat:1 }}%
+                                                    </span>
+                                                {% else %}
+                                                    <span class="growth-neutral">
+                                                        <i class="fas fa-minus"></i> 0%
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-chart-bar fa-3x mb-3 opacity-25"></i>
+                        <p>No data available for the selected period.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Top Clients by Volume -->
+    <div class="col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-trophy me-2 text-warning"></i>Top Clients by Volume
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if top_clients_volume %}
+                    {% for client in top_clients_volume %}
+                        <div class="client-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <span class="badge badge-rank bg-primary me-3">#{{ forloop.counter }}</span>
+                                <div>
+                                    <strong class="d-block">{{ client.name }}</strong>
+                                    <small class="text-muted">
+                                        <i class="fas fa-box me-1"></i>{{ client.shipment_count }} shipments
+                                    </small>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-users fa-3x mb-3 opacity-25"></i>
+                        <p>No client data available.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Clients by Value -->
+    <div class="col-md-6 mb-4">
+        <div class="card stat-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-dollar-sign me-2 text-success"></i>Top Clients by Value
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if top_clients_value %}
+                    {% for client in top_clients_value %}
+                        <div class="client-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <span class="badge badge-rank bg-success me-3">#{{ forloop.counter }}</span>
+                                <div>
+                                    <strong class="d-block">{{ client.name }}</strong>
+                                    <small class="text-muted">
+                                        <i class="fas fa-money-bill-wave me-1"></i>{{ client.total_value|floatformat:0 }} DA
+                                    </small>
+                                </div>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted"></i>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-users fa-3x mb-3 opacity-25"></i>
+                        <p>No client data available.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Destinations -->
+<div class="row">
+    <div class="col-12">
+        <div class="card stat-card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-map-marker-alt me-2 text-danger"></i>Top Destinations
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if top_destinations %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Rank</th>
+                                    <th><i class="fas fa-map-pin me-1"></i>Destination</th>
+                                    <th><i class="fas fa-box me-1"></i>Shipments</th>
+                                    <th><i class="fas fa-money-bill-wave me-1"></i>Revenue (DA)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for destination in top_destinations %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge badge-rank bg-info">#{{ forloop.counter }}</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ destination.city }}</strong>, {{ destination.country }}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ destination.shipment_count }}</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ destination.revenue|floatformat:0 }}</strong> DA
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-map-marked-alt fa-3x mb-3 opacity-25"></i>
+                        <p>No destination data available.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

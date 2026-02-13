@@ -1,0 +1,124 @@
+{% extends 'driver/base.html' %} {% block title %}Tours - Driver Portal{%
+endblock %} {% block content %}
+<div class="page-header">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h2 class="mb-0"><i class="fas fa-route me-2"></i>Your Tours</h2>
+    </div>
+    <a
+      href="{% url 'driver:dashboard' %}"
+      class="btn btn-sm btn-outline-primary"
+    >
+      <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-light">
+    <h5 class="mb-0">
+      <i class="fas fa-list me-2"></i>All Tours
+      <span class="badge bg-primary float-end">{{ tours.count }}</span>
+    </h5>
+  </div>
+  <div class="card-body p-0">
+    {% if tours %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th><i class="fas fa-hashtag me-1"></i>Tour #</th>
+            <th><i class="fas fa-calendar me-1"></i>Date</th>
+            <th><i class="fas fa-cube me-1"></i>Shipments</th>
+            <th><i class="fas fa-car me-1"></i>Vehicle</th>
+            <th><i class="fas fa-tag me-1"></i>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tour in tours %}
+          <tr>
+            <td><strong>{{ tour.tour_number }}</strong></td>
+            <td>{{ tour.date|date:"M d, Y" }}</td>
+            <td>
+              <span class="badge bg-secondary">{{ tour.shipments.count }}</span>
+            </td>
+            <td>
+              <small class="text-muted">{{ tour.vehicle.plate_number }}</small>
+            </td>
+            <td>
+              <span class="badge badge-status badge-{{ tour.status }}">
+                {{ tour.get_status_display }}
+              </span>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a
+                  href="{% url 'driver:tour_detail' tour.id %}"
+                  class="btn btn-outline-primary"
+                  title="View Details"
+                >
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if tour.status == 'planned' %}
+                <a
+                  href="{% url 'driver:start_tour' tour.id %}"
+                  class="btn btn-outline-success"
+                  title="Start Tour"
+                >
+                  <i class="fas fa-play"></i>
+                </a>
+                {% elif tour.status == 'in_progress' %}
+                <a
+                  href="{% url 'driver:complete_tour' tour.id %}"
+                  class="btn btn-outline-warning"
+                  title="Complete Tour"
+                >
+                  <i class="fas fa-check"></i>
+                </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-5 text-center text-muted">
+      <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+      <p>No tours assigned yet.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .badge-status {
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .badge-planned {
+    background: #cfe2ff;
+    color: #084298;
+  }
+
+  .badge-in_progress {
+    background: #cff4fc;
+    color: #055160;
+  }
+
+  .badge-completed {
+    background: #d1e7dd;
+    color: #0f5132;
+  }
+
+  .badge-cancelled {
+    background: #f8d7da;
+    color: #842029;
+  }
+</style>
+{% endblock %}

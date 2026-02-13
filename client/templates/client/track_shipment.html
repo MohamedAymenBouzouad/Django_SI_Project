@@ -1,0 +1,63 @@
+{% extends 'client/base.html' %}
+
+{% block title %}Track Shipment{% endblock %}
+{% block header %}Track Shipment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 text-center">
+        <div class="mb-5">
+            <i class="fas fa-satellite-dish fa-4x text-primary mb-3 opacity-50"></i>
+            <h2 class="fw-bold">Track Your Package</h2>
+            <p class="text-muted">Enter your tracking number below to see the current status associated with your account.</p>
+        </div>
+
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <form method="post" action="{% url 'client:track_shipment' %}">
+                    {% csrf_token %}
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control form-control-lg" id="trackingNumber" name="tracking_number" placeholder="Tracking Number" required>
+                        <label for="trackingNumber">Tracking Number (e.g., TRK-123456789)</label>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search me-2"></i> Track Package
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-5 text-start">
+            <h5 class="mb-3">Recent Inquiries</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{% url 'client:shipment_list' %}" class="card bg-white text-decoration-none h-100 hover-shadow">
+                        <div class="card-body text-center">
+                            <i class="fas fa-history text-muted mb-2"></i>
+                            <h6 class="text-dark">View History</h6>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'client:submit_claim' %}" class="card bg-white text-decoration-none h-100 hover-shadow">
+                        <div class="card-body text-center">
+                            <i class="fas fa-exclamation-triangle text-muted mb-2"></i>
+                            <h6 class="text-dark">Report Issue</h6>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'client:dashboard' %}" class="card bg-white text-decoration-none h-100 hover-shadow">
+                        <div class="card-body text-center">
+                            <i class="fas fa-home text-muted mb-2"></i>
+                            <h6 class="text-dark">Dashboard</h6>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

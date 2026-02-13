@@ -1,0 +1,218 @@
+{% extends 'driver/base.html' %} {% block title %}Tour Details - Driver Portal{%
+endblock %} {% block content %}
+<div class="page-header">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h2 class="mb-0">
+        <i class="fas fa-route me-2"></i>Tour {{ tour.tour_number }}
+      </h2>
+      <small class="text-muted">{{ tour.date|date:"F j, Y" }}</small>
+    </div>
+    <a
+      href="{% url 'driver:tour_list' %}"
+      class="btn btn-sm btn-outline-primary"
+    >
+      <i class="fas fa-arrow-left me-1"></i>Back to Tours
+    </a>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">
+          <i class="fas fa-info-circle me-2"></i>Tour Information
+        </h5>
+      </div>
+      <div class="card-body">
+        <p>
+          <strong>Tour Number:</strong><br />
+          {{ tour.tour_number }}
+        </p>
+        <p>
+          <strong>Planned Date:</strong><br />
+          {{ tour.date|date:"M d, Y" }}
+        </p>
+        <p>
+          <strong>Vehicle:</strong><br />
+          {{ tour.vehicle.plate_number }} - {{ tour.vehicle.vehicle_type }}
+        </p>
+        <p>
+          <strong>Status:</strong><br />
+          <span class="badge badge-status badge-{{ tour.status }}">
+            {{ tour.get_status_display }}
+          </span>
+        </p>
+        {% if tour.actual_start_time %}
+        <p>
+          <strong>Start Time:</strong><br />
+          {{ tour.actual_start_time|time:"H:i" }}
+        </p>
+        {% endif %} {% if tour.actual_end_time %}
+        <p>
+          <strong>End Time:</strong><br />
+          {{ tour.actual_end_time|time:"H:i" }}
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">
+          <i class="fas fa-chart-bar me-2"></i>Tour Statistics
+        </h5>
+      </div>
+      <div class="card-body">
+        <p>
+          <strong>Total Shipments:</strong><br />
+          <span class="badge bg-secondary">{{ shipments.count }}</span>
+        </p>
+        <p>
+          <strong>Delivered:</strong><br />
+          <span class="badge bg-success"
+            >{{ shipments.delivered|default:0 }}</span
+          >
+        </p>
+        <p>
+          <strong>Out for Delivery:</strong><br />
+          <span class="badge bg-info"
+            >{{ shipments.in_transit|default:0 }}</span
+          >
+        </p>
+        <p>
+          <strong>Failed:</strong><br />
+          <span class="badge bg-danger">{{ shipments.failed|default:0 }}</span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Shipments in Tour -->
+<div class="card">
+  <div class="card-header bg-light">
+    <h5 class="mb-0">
+      <i class="fas fa-box me-2"></i>Shipments in Tour
+      <span class="badge bg-primary float-end">{{ shipments.count }}</span>
+    </h5>
+  </div>
+  <div class="card-body p-0">
+    {% if shipments %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th><i class="fas fa-hashtag me-1"></i>Tracking #</th>
+            <th><i class="fas fa-location-dot me-1"></i>Destination</th>
+            <th><i class="fas fa-user me-1"></i>Recipient</th>
+            <th><i class="fas fa-tag me-1"></i>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for shipment in shipments %}
+          <tr>
+            <td><strong>{{ shipment.tracking_number }}</strong></td>
+            <td>
+              {{ shipment.destination.city }}, {{ shipment.destination.country
+              }}
+            </td>
+            <td>
+              <small class="text-muted">{{ shipment.client.name }}</small>
+            </td>
+            <td>
+              <span class="badge bg-{{ shipment.status|status_badge_color }}">
+                {{ shipment.get_status_display }}
+              </span>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                {% if shipment.status not in 'delivered,failed_delivery' %}
+                <a
+                  href="#updateStatusModal"
+                  class="btn btn-outline-primary btn-sm"
+                  data-bs-toggle="modal"
+                  data-shipment-id="{{ shipment.id }}"
+                  data-shipment-tracking="{{ shipment.tracking_number }}"
+                >
+                  <i class="fas fa-pencil"></i> Update
+                </a>
+                {% else %}
+                <button class="btn btn-outline-secondary btn-sm" disabled>
+                  <i class="fas fa-check"></i> Complete
+                </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-5 text-center text-muted">
+      <i class="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+      <p>No shipments in this tour.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Tour Actions -->
+<div class="mt-4 text-center">
+  {% if tour.status == 'planned' %}
+  <a
+    href="{% url 'driver:start_tour' tour.id %}"
+    class="btn btn-lg btn-success"
+  >
+    <i class="fas fa-play me-2"></i>Start Tour
+  </a>
+  {% elif tour.status == 'in_progress' %}
+  <a
+    href="{% url 'driver:complete_tour' tour.id %}"
+    class="btn btn-lg btn-warning"
+  >
+    <i class="fas fa-check me-2"></i>Complete Tour
+  </a>
+  <a href="{% url 'driver:report_incident' %}" class="btn btn-lg btn-danger">
+    <i class="fas fa-exclamation-triangle me-2"></i>Report Incident
+  </a>
+  {% endif %}
+</div>
+
+<style>
+  .badge-status {
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  .badge-planned {
+    background: #cfe2ff;
+    color: #084298;
+  }
+
+  .badge-in_progress,
+  .badge-in_transit {
+    background: #cff4fc;
+    color: #055160;
+  }
+
+  .badge-completed,
+  .badge-delivered {
+    background: #d1e7dd;
+    color: #0f5132;
+  }
+
+  .badge-failed,
+  .badge-failed_delivery {
+    background: #f8d7da;
+    color: #842029;
+  }
+</style>
+{% endblock %}
